@@ -1,7 +1,6 @@
 package recaptch
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -25,17 +24,17 @@ func New(secret string) *Recaptcha {
 	return &Recaptcha{secret: secret}
 }
 
-type response struct {
+type Response struct {
 	Success bool `json:"success"`
 	ErrorCodes []string `json:"error-code"`
 }
 
-func (r *Recaptch) Verify(response, remoteIP string) (bool, []error) {
+func (r *Recaptcha) Verify(response, remoteIP string) (bool, []error) {
 	var data = url.Values{}
-	data["secret"] = r.secret
-	data["response"] = response
+	data.Set("secret", r.secret)
+	data.Set("response", response)
 	if remoteIP != "" {
-		data["remoteip"] = remoteIP
+		data.Set("remoteip", remoteIP)
 	}
 
 	resp, err := http.PostForm(endpoint, data)
@@ -44,15 +43,15 @@ func (r *Recaptch) Verify(response, remoteIP string) (bool, []error) {
 	}
 	defer resp.Body.Close()
 
-	var res response 
-	err = json.Unmarshal(resp.Body, &res)
+	var res Response 
+	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
 		return false, []error{err}
 	}
 	var errs []error
-	if len(r.ErrorCodes) != 0 {
+	if len(res.ErrorCodes) != 0 {
 		for _, v := range res.ErrorCodes {
-			append(errs, errors.New(errorMessages[v]))
+			errs = append(errs, errors.New(errorMessages[v]))
 		}
 		return false, errs
 	}
