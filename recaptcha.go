@@ -14,10 +14,10 @@ var errorMessages = map[string]string {
 	"missing-input-secret": "The secret parameter is missing.", 
 	"invalid-input-secret": "The secret parameter is invalid or malformed.",
 	"missing-input-response": "The response parameter is missing.",
-	"invalid-input-response": "The response parameter is invalid or malformed."
+	"invalid-input-response": "The response parameter is invalid or malformed.",
 }
 
-type Recaptch astruct {
+type Recaptcha struct {
 	secret string
 }
 
@@ -44,14 +44,14 @@ func (r *Recaptch) Verify(response, remoteIP string) (bool, []error) {
 	}
 	defer resp.Body.Close()
 
-	var r response 
-	err = json.Unmarshal(resp.Body, &r)
+	var res response 
+	err = json.Unmarshal(resp.Body, &res)
 	if err != nil {
 		return false, []error{err}
 	}
 	var errs []error
 	if len(r.ErrorCodes) != 0 {
-		for _, v := range r.ErrorCodes {
+		for _, v := range res.ErrorCodes {
 			append(errs, errors.New(errorMessages[v]))
 		}
 		return false, errs
